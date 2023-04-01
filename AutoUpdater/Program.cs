@@ -42,7 +42,7 @@ public class Program
             UnZip(zipType, fileName, downloadFolder);
             Console.WriteLine("Unzipped");
 
-            if (copySource is not null)
+            if (copySource is not (null or "null"))
             {
                 MovePath(copySource, downloadFolder);
                 Directory.Delete(copySource);
