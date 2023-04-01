@@ -1,4 +1,5 @@
-﻿using System.IO.Compression;
+﻿using System.Diagnostics;
+using System.IO.Compression;
 
 public class Program
 {
@@ -24,6 +25,7 @@ public class Program
             var zipType = args.Length > 3 ? args[3] : "none";
             var closeOnComplete = args.Length > 4 && bool.Parse(args[4]);
             var copySource = args.Length > 5 ? args[5] : null;
+            var runProgramPath = args.Length > 6 ? args[6] : null;
 
             if (cleanPath)
             {
@@ -44,6 +46,11 @@ public class Program
             {
                 MovePath(copySource, downloadFolder);
                 Directory.Delete(copySource);
+            }
+
+            if (runProgramPath is not null)
+            {
+                Process.Start(runProgramPath, "update-complete");
             }
 
             if (closeOnComplete) return;

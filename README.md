@@ -35,3 +35,5 @@ RayWork.SelfUpdater</a>
    - close the downloader console when the download is complete
 6. copy source [null]
    - if set then it will copy from a directory inside the unzipped folder into the download folder
+7. run program path
+   - the path of the program to run
