@@ -23,17 +23,13 @@ RayWork.SelfUpdater</a>
 ---
 
 1. download site
-   - site that the download comes from, must be a direct download
+    - site that the download comes from, must be a direct download
 2. download folder
-   - can not be empty directory
-   - has to be the directory to download into
-3. clean path [false]
-   - if to clean/delete everything in download folder
-4. zip type [none]
-   - what compression type is used, currently only `zip` is supported
-5. close on complete [false]
-   - close the downloader console when the download is complete
-6. copy source [null]
-   - if set then it will copy from a directory inside the unzipped folder into the download folder
-7. run program path
-   - the path of the program to run
+    - can not be empty directory
+    - has to be the directory to download into
+3. close on complete [false]
+    - close the downloader console when the download is complete
+4. copy source [null]
+    - if set then it will copy from a directory inside the unzipped folder into the download folder
+5. run program path
+    - the path of the program to run

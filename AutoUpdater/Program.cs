@@ -21,26 +21,21 @@ public class Program
 
             var downloadSite = args[0];
             var downloadFolder = args[1];
-            var cleanPath = args.Length > 2 && bool.Parse(args[2]);
-            var zipType = args.Length > 3 ? args[3] : "none";
-            var closeOnComplete = args.Length > 4 && bool.Parse(args[4]);
-            var copySource = args.Length > 5 ? args[5] : null;
-            var runProgramPath = args.Length > 6 ? args[6] : null;
-
-            if (cleanPath)
-            {
-                Console.WriteLine($"Cleaning path: [{downloadFolder}]");
-                CleanPath(downloadFolder);
-            }
+            var closeOnComplete = args.Length > 2 && bool.Parse(args[2]);
+            var copySource = args.Length > 3 ? args[3] : null;
+            var runProgramPath = args.Length > 4 ? args[4] : null;
 
             var fileName = downloadSite.Split('/')[^1];
             Console.WriteLine($"Downloading: [{fileName}]");
+            if (File.Exists(fileName))
+            {
+                CleanFile(fileName);
+            }
+
             Download(downloadSite, fileName).GetAwaiter().GetResult();
             Console.WriteLine($"Downloaded: [{fileName}]");
 
-            Console.WriteLine("Unzipping");
-            UnZip(zipType, fileName, downloadFolder);
-            Console.WriteLine("Unzipped");
+            UnZip(downloadSite.Split('.')[^1].ToLower(), fileName, downloadFolder);
 
             if (copySource is not (null or "null"))
             {
@@ -74,65 +69,62 @@ public class Program
         await clientStream.CopyToAsync(fileStream);
     }
 
-    private static bool CleanPath(string path)
-    {
-        if (path == CurrentDirectory) return false;
-
-        foreach (var file in Directory.GetFiles(path))
-        {
-            Console.WriteLine($"deleting [{file}]");
-
-            while (true)
-            {
-                try
-                {
-                    File.Delete(file);
-                    break;
-                }
-                catch (AccessViolationException)
-                {
-                    Console.WriteLine($"file: [{file}] is in use, waiting 2s to try again . . .");
-                    Task.Delay(2000).GetAwaiter().GetResult();
-                }
-            }
-        }
-
-        foreach (var folder in Directory.GetDirectories(path))
-        {
-            if (!CleanPath(folder)) continue;
-
-            Console.WriteLine($"deleting [{folder}]");
-
-            while (true)
-            {
-                try
-                {
-                    Directory.Delete(folder);
-                    break;
-                }
-                catch (AccessViolationException)
-                {
-                    Console.WriteLine($"folder: [{folder}] is in use, waiting 2s to try again . . .");
-                    Task.Delay(2000).GetAwaiter().GetResult();
-                }
-            }
-        }
-
-        return true;
-    }
-
     private static void MovePath(string path, string dest)
     {
         foreach (var file in Directory.GetFiles(path))
         {
-            File.Move(file,
-                $"{dest}{file[file.Replace("\\", "/").LastIndexOf('/')..]}");
+            var newFilePath = $"{dest}{file[file.Replace("\\", "/").LastIndexOf('/')..]}";
+
+            if (File.Exists(newFilePath))
+            {
+                CleanFile(newFilePath);
+            }
+
+            File.Move(file, newFilePath);
         }
 
         foreach (var dir in Directory.GetDirectories(path))
         {
-            Directory.Move(dir,
-                $"{dest}{dir[dir.Replace("\\", "/").LastIndexOf('/')..]}");
+            var newDir = $"{dest}{dir[dir.Replace("\\", "/").LastIndexOf('/')..]}";
+
+            if (Directory.Exists(newDir))
+            {
+                CleanDir(newDir);
+            }
+
+            Directory.Move(dir, newDir);
+        }
+    }
+
+    private static void CleanDir(string dir)
+    {
+        foreach (var file in Directory.GetFiles(dir))
+        {
+            CleanFile(file);
+        }
+
+        foreach (var subDir in Directory.GetDirectories(dir))
+        {
+            CleanDir(subDir);
+        }
+
+        Directory.Delete(dir);
+    }
+
+    private static void CleanFile(string file)
+    {
+        while (true)
+        {
+            try
+            {
+                File.Delete(file);
+                break;
+            }
+            catch (AccessViolationException)
+            {
+                Console.WriteLine($"file: [{file}] is in use, waiting 2s to try again . . .");
+                Task.Delay(2000).GetAwaiter().GetResult();
+            }
         }
     }
 
@@ -141,8 +133,10 @@ public class Program
         switch (zipType)
         {
             case "zip":
-                ZipFile.ExtractToDirectory(file, dest);
+                Console.WriteLine("Unzipping");
+                ZipFile.ExtractToDirectory(file, dest, true);
                 File.Delete(file);
+                Console.WriteLine("Unzipped");
                 break;
         }
     }
